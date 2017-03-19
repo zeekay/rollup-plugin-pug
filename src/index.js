@@ -1,11 +1,11 @@
-import { compile, compileClientWithDependenciesTracked } from 'pug'
-import { resolve, dirname } from 'path'
-import genPugSourceMap from 'gen-pug-source-map'
-import makeFilter from './make-filter'
-import assign from './assign'
+// import { compile, compileClientWithDependenciesTracked } from 'pug'
+// import { resolve, dirname } from 'path'
+// import genPugSourceMap from 'gen-pug-source-map'
+// import makeFilter from './make-filter'
+// import assign from './assign'
 
 // used pug options, note this list does not include 'name'
-const PUGPROPS = [
+var PUGPROPS = [
   'filename', 'basedir', 'doctype', 'pretty', 'filters', 'self',
   'debug', 'compileDebug', 'globals', 'inlineRuntimeFunctions'
 ]
@@ -13,8 +13,8 @@ const PUGPROPS = [
 // perform a deep cloning of an object
 function clone (obj) {
   if (obj == null || typeof obj != 'object') return obj
-  const copy = obj.constructor()
-  for (const attr in obj) {
+  var copy = obj.varructor()
+  for (var attr in obj) {
     if (obj.hasOwnProperty(attr)) copy[attr] = clone(obj[attr])
   }
   return copy
@@ -22,7 +22,7 @@ function clone (obj) {
 
 // deep copy of the properties filtered by list
 function cloneProps (src, list) {
-  return list.reduce((o, p) => {
+  return list.reduce(function(o,p) {
     if (p in src) o[p] = clone(src[p])
     return o
   }, {})
@@ -30,14 +30,14 @@ function cloneProps (src, list) {
 
 // rollup-plugin-pug --------------------------------------
 
-export default function pugPlugin (options) {
+function pugPlugin (options) {
   if (!options) options = {}
 
   // prepare extensions to match with the extname() result
-  const filter = makeFilter(options, ['.pug', '.jade'])
+  var filter = makeFilter(options, ['.pug', '.jade'])
 
   // shallow copy options & drop properties unused props
-  const config = assign({
+  var config = assign({
     doctype: 'html',
     compileDebug: false,
     staticPattern: /\.static\.(?:pug|jade)$/,
@@ -49,10 +49,10 @@ export default function pugPlugin (options) {
   config.sourceMap  = config.sourceMap !== false
 
   // v1.0.3 add default globals to the user defined set
-  const globals = ['String', 'Number', 'Boolean', 'Date', 'Array', 'Function', 'Math', 'RegExp']
+  var globals = ['String', 'Number', 'Boolean', 'Date', 'Array', 'Function', 'Math', 'RegExp']
 
   if (config.globals) {
-    config.globals.forEach(g => { if (globals.indexOf(g) < 0) globals.push(g) })
+    config.globals.forEach(function(g) { if (globals.indexOf(g) < 0) globals.push(g) })
   }
   config.globals = globals
 
@@ -79,8 +79,8 @@ export default function pugPlugin (options) {
         return null
       }
 
-      const opts   = cloneProps(config, PUGPROPS)
-      const output = []
+      var opts   = cloneProps(config, PUGPROPS)
+      var output = []
 
       let fn, body, map, keepDbg
 
@@ -89,7 +89,7 @@ export default function pugPlugin (options) {
       if (matchStaticPattern(id)) {
 
         // v1.0.3: include compiler options in locals as "options"
-        const locals = config.locals
+        var locals = config.locals
         locals._pug_options = assign({}, config)
         delete locals._pug_options.locals
 
@@ -109,22 +109,22 @@ export default function pugPlugin (options) {
         }
       }
 
-      const deps = fn.dependencies
+      var deps = fn.dependencies
       if (deps.length > 1) {
-        const ins = {}
+        var ins = {}
 
-        deps.forEach((dep) => {
+        deps.forEach(function(dep) {
           if (dep in ins) return
-          ins[dep] = output.push(`import '${dep}';`)
+          ins[dep] = output.push("import '${dep}';")
         })
       }
 
-      output.push(`export default ${body}`)
+      output.push("export default ${body}")
 
       body = output.join('\n') + '\n'
 
       if (map) {
-        const bundle = genPugSourceMap(id, body, {
+        var bundle = genPugSourceMap(id, body, {
           basedir: opts.basedir,
           keepDebugLines: keepDbg
         })
